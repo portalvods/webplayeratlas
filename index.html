@@ -55,10 +55,14 @@
 
         .info-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid var(--neon); }
 
+        /* PLAYER AREA */
+        #player-screen { background: #000; }
+        video { width: 100%; max-width: 900px; border: 2px solid var(--neon); border-radius: 15px; }
+
         /* FOOTER */
         .footer { position: absolute; bottom: 20px; width: 100%; padding: 0 50px; display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.3); pointer-events: none; }
         
-        #loader { display: none; margin: 15px auto; border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--neon); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        #loader { display: none; margin: 15px auto; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--neon); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -81,9 +85,9 @@
     <div id="screen-menu" class="screen">
         <div class="brand-title">ATLAS <span>WEB</span></div>
         <div class="menu-grid">
-            <div class="card" onclick="loadContent('live')"><i class="fas fa-tv"></i><span>TV ao vivo</span></div>
-            <div class="card" onclick="loadContent('movies')"><i class="fas fa-film"></i><span>Filmes</span></div>
-            <div class="card" onclick="loadContent('series')"><i class="fas fa-video"></i><span>Séries</span></div>
+            <div class="card" onclick="loadCategories('live')"><i class="fas fa-tv"></i><span>TV ao vivo</span></div>
+            <div class="card" onclick="loadCategories('movies')"><i class="fas fa-film"></i><span>Filmes</span></div>
+            <div class="card" onclick="loadCategories('series')"><i class="fas fa-video"></i><span>Séries</span></div>
             <div class="card" onclick="nav('screen-lists')"><i class="fas fa-list-ul"></i><span>Listas</span></div>
             <div class="card" onclick="nav('screen-settings')"><i class="fas fa-user-cog"></i><span>Ajustes</span></div>
         </div>
@@ -91,12 +95,17 @@
 
     <div id="screen-content" class="screen">
         <div class="header-area">
-            <button class="btn-back" onclick="nav('screen-menu')"><i class="fas fa-arrow-left"></i> Voltar</button>
+            <button id="back-btn-content" class="btn-back" onclick="nav('screen-menu')"><i class="fas fa-arrow-left"></i> Voltar</button>
             <h2 id="content-title">Conteúdo</h2>
             <div style="width: 80px"></div>
         </div>
-        <div class="content-container" id="content-list">
-            </div>
+        <div class="content-container" id="content-list"></div>
+    </div>
+
+    <div id="screen-player" class="screen">
+        <button class="btn-back" onclick="closePlayer()" style="margin-bottom: 20px;"><i class="fas fa-times"></i> Fechar</button>
+        <video id="main-video" controls autoplay></video>
+        <h3 id="playing-title" style="margin-top: 20px;">Streaming...</h3>
     </div>
 
     <div id="screen-lists" class="screen">
@@ -122,21 +131,17 @@
         <div class="content-container">
             <h3><i class="fas fa-info-circle"></i> Informação Geral</h3>
             <div id="account-info" class="info-box">
-                <p>Status: <span id="acc-status">Carregando...</span></p>
+                <p>Status: <span id="acc-status">Ativo</span></p>
                 <p>Expira em: <span id="acc-exp">--/--/--</span></p>
                 <p>Dispositivo: Web Browser Atlas</p>
             </div>
-
             <h3><i class="fas fa-play-circle"></i> Formato de Fluxo</h3>
             <select id="stream-format">
                 <option value="ts">MPEG-TS (.ts)</option>
-                <option value="m3u8">HLS (.m3u8) - Default</option>
+                <option value="m3u8" selected>HLS (.m3u8)</option>
             </select>
-
             <h3><i class="fas fa-database"></i> API de Metadados</h3>
-            <div class="info-box">
-                <p>TMDB Engine Ativa: Sim</p>
-            </div>
+            <div class="info-box">TMDB Engine Ativa: Sim (API v3)</div>
         </div>
     </div>
 
@@ -150,6 +155,7 @@
     const DNS = "http://atlasplay.shop";
     const PROXY = "https://api.allorigins.win/raw?url=";
     let auth = { user: '', pass: '' };
+    let currentType = '';
 
     function nav(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -160,55 +166,91 @@
         auth.user = document.getElementById('user').value;
         auth.pass = document.getElementById('pass').value;
         if(!auth.user || !auth.pass) return alert("Dados incompletos");
-
         document.getElementById('loader').style.display = "block";
-        
         try {
             const url = `${DNS}/player_api.php?username=${auth.user}&password=${auth.pass}`;
             const res = await fetch(PROXY + encodeURIComponent(url));
             const data = await res.json();
-
             if(data.user_info.auth === 1) {
                 document.getElementById('acc-status').innerText = data.user_info.status;
                 const date = new Date(data.user_info.exp_date * 1000);
-                document.getElementById('acc-exp').innerText = date.toLocaleDateString();
+                document.getElementById('acc-exp').innerText = data.user_info.exp_date ? date.toLocaleDateString() : "Ilimitado";
                 nav('screen-menu');
-            } else {
-                alert("Login Inválido");
-            }
+            } else { alert("Login Inválido"); }
         } catch(e) { alert("Erro de Conexão"); }
         finally { document.getElementById('loader').style.display = "none"; }
     }
 
-    async function loadContent(type) {
+    async function loadCategories(type) {
+        currentType = type;
         const container = document.getElementById('content-list');
         const title = document.getElementById('content-title');
-        container.innerHTML = "<p>Carregando catálogo...</p>";
+        const backBtn = document.getElementById('back-btn-content');
+        container.innerHTML = "<p>Carregando categorias...</p>";
+        title.innerText = type === 'live' ? "Canais" : type === 'movies' ? "Filmes" : "Séries";
+        backBtn.onclick = () => nav('screen-menu');
         nav('screen-content');
 
         let action = type === 'live' ? 'get_live_categories' : type === 'movies' ? 'get_vod_categories' : 'get_series_categories';
-        title.innerText = type.toUpperCase();
-
         try {
             const url = `${DNS}/player_api.php?username=${auth.user}&password=${auth.pass}&action=${action}`;
             const res = await fetch(PROXY + encodeURIComponent(url));
             const data = await res.json();
-
             container.innerHTML = `<div class="item-grid"></div>`;
             const grid = container.querySelector('.item-grid');
-
-            data.slice(0, 50).forEach(cat => {
+            data.forEach(cat => {
                 const card = document.createElement('div');
                 card.className = 'item-card';
-                card.innerHTML = `
-                    <div style="height:120px; display:flex; align-items:center; justify-content:center; background:#111">
-                        <i class="fas fa-folder" style="font-size:40px; color:var(--neon)"></i>
-                    </div>
-                    <p>${cat.category_name}</p>
-                `;
+                card.onclick = () => loadItems(type, cat.category_id);
+                card.innerHTML = `<div style="height:120px;display:flex;align-items:center;justify-content:center;background:#111"><i class="fas fa-folder" style="font-size:40px;color:var(--neon)"></i></div><p>${cat.category_name}</p>`;
                 grid.appendChild(card);
             });
-        } catch(e) { container.innerHTML = "Erro ao carregar dados."; }
+        } catch(e) { container.innerHTML = "Erro ao carregar categorias."; }
+    }
+
+    async function loadItems(type, catId) {
+        const container = document.getElementById('content-list');
+        const backBtn = document.getElementById('back-btn-content');
+        container.innerHTML = "<p>Buscando conteúdo...</p>";
+        backBtn.onclick = () => loadCategories(type);
+
+        let action = type === 'live' ? 'get_live_streams' : type === 'movies' ? 'get_vod_streams' : 'get_series';
+        try {
+            const url = `${DNS}/player_api.php?username=${auth.user}&password=${auth.pass}&action=${action}&category_id=${catId}`;
+            const res = await fetch(PROXY + encodeURIComponent(url));
+            const data = await res.json();
+            container.innerHTML = `<div class="item-grid"></div>`;
+            const grid = container.querySelector('.item-grid');
+            data.forEach(item => {
+                const name = item.name || item.title;
+                const id = item.stream_id || item.series_id;
+                const img = item.stream_icon || item.cover || 'https://via.placeholder.com/160x220?text=Sem+Foto';
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.onclick = () => playStream(type, id, name);
+                card.innerHTML = `<img src="${img}"><p>${name}</p>`;
+                grid.appendChild(card);
+            });
+        } catch(e) { container.innerHTML = "Erro ao carregar itens."; }
+    }
+
+    function playStream(type, id, name) {
+        if(type === 'series') return alert("Abra as temporadas para assistir (em desenvolvimento).");
+        const format = document.getElementById('stream-format').value;
+        const video = document.getElementById('main-video');
+        const path = type === 'live' ? 'live' : 'movie';
+        const streamUrl = `${DNS}/${path}/${auth.user}/${auth.pass}/${id}.${format}`;
+        
+        document.getElementById('playing-title').innerText = name;
+        video.src = streamUrl;
+        nav('screen-player');
+    }
+
+    function closePlayer() {
+        const video = document.getElementById('main-video');
+        video.pause();
+        video.src = "";
+        nav('screen-content');
     }
 </script>
 
