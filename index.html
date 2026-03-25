@@ -46,10 +46,8 @@
 
         #screen-player { background: #000; z-index: 999; padding: 0; }
         #video-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
-        video { width: 95%; height: 85%; border-radius: 10px; border: 2px solid var(--neon); background: #000; box-shadow: 0 0 100px rgba(0, 229, 255, 0.2); }
+        video { width: 100%; height: 100%; background: #000; }
         .close-player { position: absolute; top: 20px; right: 20px; background: red; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; z-index: 1001; }
-
-        .footer-info { position: absolute; bottom: 20px; width: 95%; display: flex; justify-content: space-between; font-size: 10px; opacity: 0.5; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -59,71 +57,54 @@
 <div class="main-wrapper">
     <div id="screen-login" class="screen active">
         <div id="login-box">
-            <img src="https://i.imgur.com/uU6Wk4R.png" style="width: 150px; margin-bottom: 20px;" alt="Logo Atlas">
+            <img src="https://i.imgur.com/uU6Wk4R.png" style="width: 150px; margin-bottom: 20px;">
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
-            <button class="btn-main" onclick="handleLogin()">Acessar Servidor</button>
+            <button class="btn-main" onclick="handleLogin()">Entrar</button>
         </div>
     </div>
 
     <div id="screen-menu" class="screen">
-        <div class="logo-container">
-            <img src="https://i.imgur.com/uU6Wk4R.png" alt="Atlas Logo">
-        </div>
+        <div class="logo-container"><img src="https://i.imgur.com/uU6Wk4R.png"></div>
         <div class="menu-grid">
             <div class="menu-item" onclick="loadCategories('live')"><i class="fas fa-tv"></i><span>CANAIS</span></div>
             <div class="menu-item" onclick="loadCategories('movies')"><i class="fas fa-film"></i><span>FILMES</span></div>
             <div class="menu-item" onclick="loadCategories('series')"><i class="fas fa-video"></i><span>SÉRIES</span></div>
-            <div class="menu-item" onclick="nav('screen-lists')"><i class="fas fa-list-ul"></i><span>LISTAS</span></div>
             <div class="menu-item" onclick="nav('screen-settings')"><i class="fas fa-cog"></i><span>AJUSTES</span></div>
+            <div class="menu-item" onclick="location.reload()"><i class="fas fa-sync"></i><span>SAIR</span></div>
         </div>
-        <button class="btn-main" style="width: 200px; margin-top: 30px; background: rgba(255,255,255,0.1); color: white;" onclick="location.reload()">
-            <i class="fas fa-sync"></i> Recarregar App
-        </button>
     </div>
 
     <div id="screen-content" class="screen">
         <div style="width:100%; display:flex; justify-content: space-between; margin-bottom: 15px;">
-            <button class="btn-main" style="width: 120px;" onclick="nav('screen-menu')">Voltar</button>
-            <h2 id="cat-title">Atlas Content</h2>
-            <div style="width:120px;"></div>
+            <button class="btn-main" style="width: 100px;" onclick="nav('screen-menu')">Voltar</button>
+            <h2 id="cat-title">Atlas Servers</h2>
+            <div style="width:100px;"></div>
         </div>
         <div class="content-area" id="content-list"></div>
     </div>
 
     <div id="screen-player" class="screen">
-        <button class="close-player" onclick="closePlayer()">X FECHAR PLAYER</button>
+        <button class="close-player" onclick="closePlayer()">FECHAR</button>
         <div id="video-container">
             <video id="main-video" controls autoplay playsinline></video>
         </div>
-        <h3 id="playing-now" style="color: var(--neon); text-align: center;">Reproduzindo...</h3>
     </div>
 
     <div id="screen-settings" class="screen">
-        <button class="btn-main" style="width: 120px;" onclick="nav('screen-menu')">Voltar</button>
-        <div class="content-area" style="margin-top: 20px;">
-            <h3>Ajustes Técnicos</h3>
+        <button class="btn-main" style="width: 100px;" onclick="nav('screen-menu')">Voltar</button>
+        <div class="content-area" style="margin-top:20px;">
+            <h3>Configurações</h3>
             <p>DNS: atlasplay.shop</p>
-            <p>Status: <span id="st-auth" style="color:var(--neon)">Online</span></p>
+            <p>Player: HLS.JS (Auto)</p>
         </div>
-    </div>
-
-    <div id="screen-lists" class="screen">
-        <button class="btn-main" style="width: 120px;" onclick="nav('screen-menu')">Voltar</button>
-        <div class="content-area" style="margin-top: 20px; text-align: center;">
-            <p>Sua lista principal Atlas Servers está ativa.</p>
-        </div>
-    </div>
-
-    <div class="footer-info">
-        <span>Chave: 457702 | MAC: 66:88:F3:77:B5:E2</span>
-        <span>Version 1.1.0 | Atlas Servers</span>
     </div>
 </div>
 
 <script>
     const DNS = "http://atlasplay.shop";
-    const PROXY = "https://api.allorigins.win/raw?url=";
+    // Proxy alternativo mais robusto
+    const PROXY = "https://corsproxy.io/?"; 
     let auth = { user: '', pass: '' };
     let hls = null;
 
@@ -132,13 +113,16 @@
         document.getElementById(id).classList.add('active');
     }
 
-    async function fetchData(action, extra = '') {
+    async function apiReq(action, extra = '') {
         const url = `${DNS}/player_api.php?username=${auth.user}&password=${auth.pass}&action=${action}${extra}`;
         try {
-            const response = await fetch(PROXY + encodeURIComponent(url) + '&cache=' + Date.now());
-            return await response.json();
+            const r = await fetch(PROXY + encodeURIComponent(url));
+            const text = await r.text();
+            // Tenta limpar o JSON se vier com lixo do servidor
+            const cleanJson = text.substring(text.indexOf('['), text.lastIndexOf(']') + 1) || text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+            return JSON.parse(cleanJson);
         } catch (e) {
-            console.error("Erro na requisição:", e);
+            console.log("Erro API:", e);
             return null;
         }
     }
@@ -146,78 +130,69 @@
     async function handleLogin() {
         auth.user = document.getElementById('user').value;
         auth.pass = document.getElementById('pass').value;
-        if(!auth.user || !auth.pass) return alert("Preencha tudo!");
-        
-        const data = await fetchData('');
+        const data = await apiReq('');
         if(data && data.user_info.auth === 1) nav('screen-menu');
-        else alert("Acesso negado ou servidor offline.");
+        else alert("Erro de Login!");
     }
 
     async function loadCategories(type) {
-        const container = document.getElementById('content-list');
-        container.innerHTML = "<div style='text-align:center; margin-top:50px;'><i class='fas fa-spinner fa-spin' style='font-size:40px; color:var(--neon)'></i><br><br>Sincronizando Categorias...</div>";
+        const list = document.getElementById('content-list');
+        list.innerHTML = "Carregando Categorias...";
         nav('screen-content');
         
-        let action = type === 'live' ? 'get_live_categories' : type === 'movies' ? 'get_vod_categories' : 'get_series_categories';
-        const data = await fetchData(action);
+        let act = type === 'live' ? 'get_live_categories' : type === 'movies' ? 'get_vod_categories' : 'get_series_categories';
+        const data = await apiReq(act);
         
-        if(!data) { container.innerHTML = "Erro ao carregar dados do servidor."; return; }
+        if(!data || data.length === 0) { list.innerHTML = "Nenhuma categoria encontrada."; return; }
 
-        container.innerHTML = `<div class="item-grid"></div>`;
-        data.forEach(cat => {
-            const div = document.createElement('div');
-            div.className = 'item-card';
-            div.onclick = () => loadItems(type, cat.category_id);
-            div.innerHTML = `<div style="height:150px; display:flex; align-items:center; justify-content:center; background:#111;"><i class="fas fa-folder" style="font-size:50px; color:var(--neon)"></i></div><p>${cat.category_name}</p>`;
-            container.querySelector('.item-grid').appendChild(div);
+        list.innerHTML = `<div class="item-grid"></div>`;
+        data.forEach(c => {
+            const d = document.createElement('div');
+            d.className = 'item-card';
+            d.onclick = () => loadItems(type, c.category_id);
+            d.innerHTML = `<div style="height:120px; display:flex; align-items:center; justify-content:center; background:#111;"><i class="fas fa-folder" style="font-size:40px; color:var(--neon)"></i></div><p>${c.category_name}</p>`;
+            list.querySelector('.item-grid').appendChild(d);
         });
     }
 
-    async function loadItems(type, catId) {
-        const container = document.getElementById('content-list');
-        container.innerHTML = "<div style='text-align:center; margin-top:50px;'><i class='fas fa-sync fa-spin' style='font-size:40px; color:var(--neon)'></i><br><br>Carregando Conteúdos...</div>";
-        let action = type === 'live' ? 'get_live_streams' : type === 'movies' ? 'get_vod_streams' : 'get_series';
+    async function loadItems(type, id) {
+        const list = document.getElementById('content-list');
+        list.innerHTML = "Buscando conteúdo...";
+        let act = type === 'live' ? 'get_live_streams' : type === 'movies' ? 'get_vod_streams' : 'get_series';
         
-        const data = await fetchData(action, `&category_id=${catId}`);
-        if(!data) { container.innerHTML = "Erro ao carregar itens desta categoria."; return; }
+        const data = await apiReq(act, `&category_id=${id}`);
+        if(!data) { list.innerHTML = "Erro ao carregar itens."; return; }
 
-        container.innerHTML = `<div class="item-grid"></div>`;
-        data.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'item-card';
-            div.onclick = () => playStream(type, item.stream_id || item.series_id, item.name || item.title);
-            const thumb = item.stream_icon || item.cover || 'https://via.placeholder.com/160x230/111/fff?text=ATLAS';
-            div.innerHTML = `<img src="${thumb}" loading="lazy"><p>${item.name || item.title}</p>`;
-            container.querySelector('.item-grid').appendChild(div);
+        list.innerHTML = `<div class="item-grid"></div>`;
+        data.forEach(i => {
+            const d = document.createElement('div');
+            d.className = 'item-card';
+            d.onclick = () => play(type, i.stream_id || i.series_id);
+            const img = i.stream_icon || i.cover || 'https://via.placeholder.com/160x230/111/fff?text=ATLAS';
+            d.innerHTML = `<img src="${img}" loading="lazy"><p>${i.name || i.title}</p>`;
+            list.querySelector('.item-grid').appendChild(d);
         });
     }
 
-    function playStream(type, id, name) {
-        const video = document.getElementById('main-video');
-        const path = type === 'live' ? 'live' : 'movie';
-        const streamUrl = `${DNS}/${path}/${auth.user}/${auth.pass}/${id}.m3u8`;
-        
-        document.getElementById('playing-now').innerText = "Assistindo: " + name;
+    function play(type, id) {
+        const v = document.getElementById('main-video');
+        const streamUrl = `${DNS}/${type === 'live' ? 'live' : 'movie'}/${auth.user}/${auth.pass}/${id}.m3u8`;
         nav('screen-player');
 
         if (Hls.isSupported()) {
             if(hls) hls.destroy();
-            hls = new Hls();
+            hls = new Hls({ xhrSetup: xhr => { xhr.withCredentials = false; } });
             hls.loadSource(streamUrl);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {
-                 alert("Erro de carregamento. O servidor pode estar bloqueando este vídeo.");
-            }));
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = streamUrl;
-            video.play();
+            hls.attachMedia(v);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => v.play());
+        } else {
+            v.src = streamUrl;
         }
     }
 
     function closePlayer() {
-        const video = document.getElementById('main-video');
-        video.pause();
-        video.src = "";
+        const v = document.getElementById('main-video');
+        v.pause(); v.src = "";
         if(hls) hls.destroy();
         nav('screen-content');
     }
