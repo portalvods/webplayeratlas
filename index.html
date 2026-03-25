@@ -102,7 +102,9 @@
 </div>
 
 <script>
-    const DNS_SERVER = "http://atlasplay.shop"; 
+    const DNS_SERVER = "http://atlasplay.shop";
+    // Proxy para evitar erro de CORS sem mexer no Nginx
+    const CORS_PROXY = "https://api.allorigins.win/raw?url=";
 
     function nav(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -122,15 +124,16 @@
         btn.style.display = "none";
 
         try {
-            // Testando a API Xtream
-            const url = `${DNS_SERVER}/player_api.php?username=${user}&password=${pass}&action=get_live_categories`;
-            const response = await fetch(url);
+            // Montando a URL com o Proxy para burlar o bloqueio do navegador
+            const api_url = `${DNS_SERVER}/player_api.php?username=${user}&password=${pass}&action=get_live_categories`;
+            const final_url = CORS_PROXY + encodeURIComponent(api_url);
             
-            if (!response.ok) throw new Error('Erro na rede');
+            const response = await fetch(final_url);
+            
+            if (!response.ok) throw new Error('Erro na conexão com o proxy');
 
             const data = await response.json();
             
-            // Se a API retornar dados, preenchemos a tela de TV
             const catContainer = document.getElementById('tv-categories');
             catContainer.innerHTML = ""; 
 
@@ -143,12 +146,12 @@
                 });
                 nav('screen-menu');
             } else {
-                alert("Falha na autenticação ou servidor sem resposta.");
+                alert("Usuário ou senha inválidos no servidor Atlas.");
             }
 
         } catch (error) {
             console.error(error);
-            alert("Erro ao conectar no servidor. Verifique o CORS no seu Nginx.");
+            alert("Erro de conexão. Verifique se a sua DNS está online.");
         } finally {
             loader.style.display = "none";
             btn.style.display = "block";
