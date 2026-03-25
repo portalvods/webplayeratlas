@@ -21,16 +21,13 @@
         .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; flex-direction: column; align-items: center; justify-content: center; animation: fadeIn 0.4s ease; padding: 30px; }
         .active { display: flex !important; }
 
-        /* HEADER LOGO */
         .logo-container { margin-bottom: 20px; text-align: center; }
         .logo-container img { width: 180px; filter: drop-shadow(0 0 10px var(--neon)); }
 
-        /* LOGIN */
         #login-box { background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(20px); padding: 40px; border-radius: 20px; border: 1px solid var(--neon); width: 380px; text-align: center; }
         input { width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.08); border: 1px solid rgba(0,229,255,0.3); border-radius: 10px; color: white; }
         .btn-main { width: 100%; padding: 15px; border: none; border-radius: 10px; background: var(--neon); color: #000; font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
-        /* MENU HOME */
         .menu-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; max-width: 1100px; }
         .menu-item { 
             background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 30px;
@@ -40,7 +37,6 @@
         .menu-item i { font-size: 45px; display: block; margin-bottom: 15px; color: var(--neon); }
         .menu-item span { font-weight: bold; font-size: 14px; }
 
-        /* LISTA DE CONTEUDO */
         .content-area { width: 100%; height: 85%; background: rgba(0,0,0,0.85); border-radius: 20px; padding: 25px; border: 1px solid var(--glass); overflow-y: auto; }
         .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
         .item-card { background: #111; border-radius: 10px; overflow: hidden; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
@@ -48,7 +44,6 @@
         .item-card img { width: 100%; height: 230px; object-fit: cover; }
         .item-card p { padding: 10px; font-size: 11px; margin: 0; text-align: center; }
 
-        /* PLAYER GIGANTE */
         #screen-player { background: #000; z-index: 999; padding: 0; }
         #video-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
         video { width: 95%; height: 85%; border-radius: 10px; border: 2px solid var(--neon); background: #000; box-shadow: 0 0 100px rgba(0, 229, 255, 0.2); }
@@ -62,7 +57,6 @@
 <body>
 
 <div class="main-wrapper">
-    
     <div id="screen-login" class="screen active">
         <div id="login-box">
             <img src="https://i.imgur.com/uU6Wk4R.png" style="width: 150px; margin-bottom: 20px;" alt="Logo Atlas">
@@ -84,7 +78,7 @@
             <div class="menu-item" onclick="nav('screen-settings')"><i class="fas fa-cog"></i><span>AJUSTES</span></div>
         </div>
         <button class="btn-main" style="width: 200px; margin-top: 30px; background: rgba(255,255,255,0.1); color: white;" onclick="location.reload()">
-            <i class="fas fa-sync"></i> Recarregar
+            <i class="fas fa-sync"></i> Recarregar App
         </button>
     </div>
 
@@ -100,7 +94,7 @@
     <div id="screen-player" class="screen">
         <button class="close-player" onclick="closePlayer()">X FECHAR PLAYER</button>
         <div id="video-container">
-            <video id="main-video" controls autoplay></video>
+            <video id="main-video" controls autoplay playsinline></video>
         </div>
         <h3 id="playing-now" style="color: var(--neon); text-align: center;">Reproduzindo...</h3>
     </div>
@@ -109,38 +103,28 @@
         <button class="btn-main" style="width: 120px;" onclick="nav('screen-menu')">Voltar</button>
         <div class="content-area" style="margin-top: 20px;">
             <h3>Ajustes Técnicos</h3>
-            <p>Formato de Fluxo:</p>
-            <select id="stream-format" style="width: 100%; padding: 10px; background: #222; color: white;">
-                <option value="m3u8">HLS (.m3u8) - Recomendado</option>
-                <option value="ts">MPEG-TS (.ts)</option>
-            </select>
-            <p style="margin-top: 20px;">DNS do Servidor: <strong>atlasplay.shop</strong></p>
+            <p>DNS: atlasplay.shop</p>
+            <p>Status: <span id="st-auth" style="color:var(--neon)">Online</span></p>
         </div>
     </div>
 
     <div id="screen-lists" class="screen">
-        <div style="width:100%; display:flex; justify-content: space-between; margin-bottom: 15px;">
-            <button class="btn-main" style="width: 120px;" onclick="nav('screen-menu')">Voltar</button>
-            <h2>Minhas Listas</h2>
-            <button class="btn-main" style="width: 50px; border-radius: 50%;" onclick="alert('Adicionar lista parceira')">+</button>
-        </div>
-        <div class="content-area">
-            <p style="text-align:center; opacity: 0.5;">Carregando listas salvas...</p>
+        <button class="btn-main" style="width: 120px;" onclick="nav('screen-menu')">Voltar</button>
+        <div class="content-area" style="margin-top: 20px; text-align: center;">
+            <p>Sua lista principal Atlas Servers está ativa.</p>
         </div>
     </div>
 
     <div class="footer-info">
         <span>Chave: 457702 | MAC: 66:88:F3:77:B5:E2</span>
-        <span>Version 1.0.47 | Atlas Servers</span>
+        <span>Version 1.1.0 | Atlas Servers</span>
     </div>
 </div>
 
 <script>
     const DNS = "http://atlasplay.shop";
-    const PROXY1 = "https://api.allorigins.win/raw?url=";
-    const PROXY2 = "https://corsproxy.io/?";
+    const PROXY = "https://api.allorigins.win/raw?url=";
     let auth = { user: '', pass: '' };
-    let currentProxy = PROXY1;
     let hls = null;
 
     function nav(id) {
@@ -148,74 +132,72 @@
         document.getElementById(id).classList.add('active');
     }
 
-    async function fetchData(url) {
+    async function fetchData(action, extra = '') {
+        const url = `${DNS}/player_api.php?username=${auth.user}&password=${auth.pass}&action=${action}${extra}`;
         try {
-            const res = await fetch(currentProxy + encodeURIComponent(url));
-            if (!res.ok) throw new Error();
-            return await res.json();
+            const response = await fetch(PROXY + encodeURIComponent(url) + '&cache=' + Date.now());
+            return await response.json();
         } catch (e) {
-            const res = await fetch(PROXY2 + encodeURIComponent(url));
-            return await res.json();
+            console.error("Erro na requisição:", e);
+            return null;
         }
     }
 
     async function handleLogin() {
         auth.user = document.getElementById('user').value;
         auth.pass = document.getElementById('pass').value;
-        if(!auth.user || !auth.pass) return alert("Insira usuário e senha");
+        if(!auth.user || !auth.pass) return alert("Preencha tudo!");
         
-        try {
-            const data = await fetchData(`${DNS}/player_api.php?username=${auth.user}&password=${auth.pass}`);
-            if(data.user_info.auth === 1) nav('screen-menu');
-            else alert("Dados incorretos!");
-        } catch(e) { alert("Erro de conexão. Verifique os dados."); }
+        const data = await fetchData('');
+        if(data && data.user_info.auth === 1) nav('screen-menu');
+        else alert("Acesso negado ou servidor offline.");
     }
 
     async function loadCategories(type) {
         const container = document.getElementById('content-list');
-        container.innerHTML = "<p style='text-align:center;'>Carregando categorias...</p>";
+        container.innerHTML = "<div style='text-align:center; margin-top:50px;'><i class='fas fa-spinner fa-spin' style='font-size:40px; color:var(--neon)'></i><br><br>Sincronizando Categorias...</div>";
         nav('screen-content');
         
         let action = type === 'live' ? 'get_live_categories' : type === 'movies' ? 'get_vod_categories' : 'get_series_categories';
-        try {
-            const data = await fetchData(`${DNS}/player_api.php?username=${auth.user}&password=${auth.pass}&action=${action}`);
-            container.innerHTML = `<div class="item-grid"></div>`;
-            data.forEach(cat => {
-                const div = document.createElement('div');
-                div.className = 'item-card';
-                div.onclick = () => loadItems(type, cat.category_id);
-                div.innerHTML = `<div style="height:150px; display:flex; align-items:center; justify-content:center; background:#111;"><i class="fas fa-folder" style="font-size:50px; color:var(--neon)"></i></div><p>${cat.category_name}</p>`;
-                container.querySelector('.item-grid').appendChild(div);
-            });
-        } catch(e) { container.innerHTML = "<p style='text-align:center;'>Erro ao carregar.</p>"; }
+        const data = await fetchData(action);
+        
+        if(!data) { container.innerHTML = "Erro ao carregar dados do servidor."; return; }
+
+        container.innerHTML = `<div class="item-grid"></div>`;
+        data.forEach(cat => {
+            const div = document.createElement('div');
+            div.className = 'item-card';
+            div.onclick = () => loadItems(type, cat.category_id);
+            div.innerHTML = `<div style="height:150px; display:flex; align-items:center; justify-content:center; background:#111;"><i class="fas fa-folder" style="font-size:50px; color:var(--neon)"></i></div><p>${cat.category_name}</p>`;
+            container.querySelector('.item-grid').appendChild(div);
+        });
     }
 
     async function loadItems(type, catId) {
         const container = document.getElementById('content-list');
-        container.innerHTML = "<p style='text-align:center;'>Buscando conteúdos...</p>";
+        container.innerHTML = "<div style='text-align:center; margin-top:50px;'><i class='fas fa-sync fa-spin' style='font-size:40px; color:var(--neon)'></i><br><br>Carregando Conteúdos...</div>";
         let action = type === 'live' ? 'get_live_streams' : type === 'movies' ? 'get_vod_streams' : 'get_series';
         
-        try {
-            const data = await fetchData(`${DNS}/player_api.php?username=${auth.user}&password=${auth.pass}&action=${action}&category_id=${catId}`);
-            container.innerHTML = `<div class="item-grid"></div>`;
-            data.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'item-card';
-                div.onclick = () => playStream(type, item.stream_id || item.series_id, item.name || item.title);
-                div.innerHTML = `<img src="${item.stream_icon || item.cover || 'https://via.placeholder.com/160x230/111/fff?text=ATLAS'}" onerror="this.src='https://via.placeholder.com/160x230/111/fff?text=ATLAS'"><p>${item.name || item.title}</p>`;
-                container.querySelector('.item-grid').appendChild(div);
-            });
-        } catch(e) { container.innerHTML = "<p style='text-align:center;'>Erro ao carregar itens.</p>"; }
+        const data = await fetchData(action, `&category_id=${catId}`);
+        if(!data) { container.innerHTML = "Erro ao carregar itens desta categoria."; return; }
+
+        container.innerHTML = `<div class="item-grid"></div>`;
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'item-card';
+            div.onclick = () => playStream(type, item.stream_id || item.series_id, item.name || item.title);
+            const thumb = item.stream_icon || item.cover || 'https://via.placeholder.com/160x230/111/fff?text=ATLAS';
+            div.innerHTML = `<img src="${thumb}" loading="lazy"><p>${item.name || item.title}</p>`;
+            container.querySelector('.item-grid').appendChild(div);
+        });
     }
 
     function playStream(type, id, name) {
-        if(type === 'series') return alert("Séries em manutenção. Teste em Filmes.");
-        const format = document.getElementById('stream-format').value;
         const video = document.getElementById('main-video');
         const path = type === 'live' ? 'live' : 'movie';
-        const streamUrl = `${DNS}/${path}/${auth.user}/${auth.pass}/${id}.${format}`;
+        const streamUrl = `${DNS}/${path}/${auth.user}/${auth.pass}/${id}.m3u8`;
         
-        document.getElementById('playing-now').innerText = "Você está assistindo: " + name;
+        document.getElementById('playing-now').innerText = "Assistindo: " + name;
         nav('screen-player');
 
         if (Hls.isSupported()) {
@@ -223,19 +205,22 @@
             hls = new Hls();
             hls.loadSource(streamUrl);
             hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-        } else {
+            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {
+                 alert("Erro de carregamento. O servidor pode estar bloqueando este vídeo.");
+            }));
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = streamUrl;
+            video.play();
         }
     }
 
     function closePlayer() {
         const video = document.getElementById('main-video');
         video.pause();
+        video.src = "";
         if(hls) hls.destroy();
         nav('screen-content');
     }
 </script>
-
 </body>
 </html>
